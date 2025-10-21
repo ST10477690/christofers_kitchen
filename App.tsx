@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { View,Text,TextInput,TouchableOpacity,FlatList,StyleSheet,KeyboardAvoidingView,Platform,ScrollView,Alert,} from 'react-native';
+import { View,  Text,  TextInput,  TouchableOpacity,  FlatList,  StyleSheet,  KeyboardAvoidingView,  Platform,  ScrollView,  Alert,  ImageBackground,} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 
 type Course = 'Starters' | 'Mains' | 'Dessert';
 
@@ -15,8 +14,46 @@ interface MenuItem {
 }
 
 export default function App() {
-  const [items, setItems] = useState<MenuItem[]>([]);
-  const [screen, setScreen] = useState<'home' | 'add'>('home');
+  const defaultItems: MenuItem[] = [
+    {
+      id: '1',
+      name: 'Garlic Bread',
+      description: 'Toasted baguette slices with garlic butter and herbs.',
+      course: 'Starters',
+      price: 35,
+    },
+    {
+      id: '2',
+      name: 'Grilled Chicken',
+      description: 'Juicy grilled chicken breast served with veggies.',
+      course: 'Mains',
+      price: 85,
+    },
+    {
+      id: '3',
+      name: 'Beef Burger',
+      description: 'Thick beef patty with cheese, lettuce, and tomato.',
+      course: 'Mains',
+      price: 95,
+    },
+    {
+      id: '4',
+      name: 'Chocolate Cake',
+      description: 'Moist chocolate sponge with rich ganache.',
+      course: 'Dessert',
+      price: 55,
+    },
+    {
+      id: '5',
+      name: 'Greek Salad',
+      description: 'Fresh salad with feta cheese, olives, and dressing.',
+      course: 'Starters',
+      price: 45,
+    },
+  ];
+
+  const [items, setItems] = useState<MenuItem[]>(defaultItems);
+  const [screen, setScreen] = useState<'home' | 'add' | 'filter'>('home');
 
   // Form states
   const [name, setName] = useState('');
@@ -64,139 +101,234 @@ export default function App() {
     ]);
   };
 
+  const handleDelete = (id: string) => {
+    setItems(prev => prev.filter(item => item.id !== id));
+  };
+
   // === HOME SCREEN ===
   if (screen === 'home') {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Menu Items</Text>
-          <Text style={styles.count}>Total: {items.length}</Text>
-        </View>
-
-        {items.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>No menu items yet — add one below.</Text>
+      <ImageBackground
+        source={require('./assets/logo_jpg.png')}
+        style={styles.bg}
+        resizeMode="cover"
+      >
+        <SafeAreaView style={styles.overlay}>
+          <View style={styles.header}>
+            <Text style={styles.title}>🍴 Restaurant Menu</Text>
+            <Text style={styles.count}>Total: {items.length} items</Text>
           </View>
-        ) : (
-          <FlatList
-            data={items}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.list}
-            renderItem={({ item }) => (
-              <View style={styles.card}>
-                <Text style={styles.itemName}>
-                  {item.name} — R{item.price.toFixed(2)}
-                </Text>
-                <Text style={styles.itemCourse}>{item.course}</Text>
-                <Text style={styles.itemDesc}>{item.description}</Text>
-              </View>
-            )}
-          />
-        )}
 
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.btnPrimary} onPress={() => setScreen('add')}>
-            <Text style={styles.btnText}>Add Menu Item</Text>
-          </TouchableOpacity>
+          {items.length === 0 ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>No menu items yet — add one below.</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={items}
+              keyExtractor={item => item.id}
+              contentContainerStyle={styles.list}
+              renderItem={({ item }) => (
+                <View style={styles.card}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.itemName}>{item.name}</Text>
+                    <Text style={styles.itemCourse}>{item.course}</Text>
+                    <Text style={styles.itemDesc}>{item.description}</Text>
+                    <Text style={styles.itemPrice}>R{item.price.toFixed(2)}</Text>
+                  </View>
+                </View>
+              )}
+            />
+          )}
 
-          <TouchableOpacity style={styles.btnSecondary} onPress={handleClearAll}>
-            <Text style={styles.btnSecondaryText}>Clear All</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+          <View style={styles.footer}>
+            <TouchableOpacity style={styles.btnPrimary} onPress={() => setScreen('add')}>
+              <Text style={styles.btnText}>Add Menu Item</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.btnPrimary} onPress={() => setScreen('filter')}>
+              <Text style={styles.btnText}>Filter by Course</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.btnSecondary} onPress={handleClearAll}>
+              <Text style={styles.btnSecondaryText}>Clear All</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
     );
   }
 
   // === ADD ITEM SCREEN ===
-  return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.select({ ios: 'padding', android: undefined })}
-    >
-      <ScrollView contentContainerStyle={styles.formContainer}>
-        <Text style={styles.formTitle}>Add Menu Item</Text>
+  if (screen === 'add') {
+    return (
+      <ImageBackground
+        source={require('./assets/logo_jpg.png')}
+        style={styles.bg}
+        resizeMode="cover"
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.select({ ios: 'padding', android: undefined })}
+        >
+          <ScrollView contentContainerStyle={styles.overlay}>
+            <Text style={styles.formTitle}>Add Menu Item</Text>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Dish name</Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Enter dish name"
-          />
-        </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>Dish name</Text>
+              <TextInput
+                style={styles.input}
+                value={name}
+                onChangeText={setName}
+                placeholder="Enter dish name"
+                placeholderTextColor="#888"
+              />
+            </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Description</Text>
-          <TextInput
-            style={[styles.input, { height: 90 }]}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Short description"
-            multiline
-          />
-        </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>Description</Text>
+              <TextInput
+                style={[styles.input, { height: 90 }]}
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Short description"
+                placeholderTextColor="#888"
+                multiline
+              />
+            </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Course</Text>
+            <View style={styles.field}>
+              <Text style={styles.label}>Course</Text>
+              <View style={styles.pickerWrap}>
+                <Picker
+                  selectedValue={course}
+                  onValueChange={value => setCourse(value as Course)}
+                >
+                  {COURSES.map(c => (
+                    <Picker.Item key={c} label={c} value={c} />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Price (R)</Text>
+              <TextInput
+                style={styles.input}
+                value={priceText}
+                onChangeText={setPriceText}
+                placeholder="e.g. 45.00"
+                placeholderTextColor="#888"
+                keyboardType="decimal-pad"
+              />
+            </View>
+
+            <View style={styles.actions}>
+              <TouchableOpacity style={styles.saveBtn} onPress={handleAddItem}>
+                <Text style={styles.saveBtnText}>Save</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => {
+                  clearForm();
+                  setScreen('home');
+                }}
+              >
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </ImageBackground>
+    );
+  }
+
+  // === FILTER BY COURSE SCREEN ===
+  if (screen === 'filter') {
+    const [filterCourse, setFilterCourse] = useState<'All' | Course>('All');
+
+    const filteredItems =
+      filterCourse === 'All'
+        ? items
+        : items.filter(item => item.course === filterCourse);
+
+    return (
+      <ImageBackground
+        source={require('./assets/logo_jpg.png')}
+        style={styles.bg}
+        resizeMode="cover"
+      >
+        <SafeAreaView style={styles.overlay}>
+          <Text style={styles.title}>🍽 Filter by Course</Text>
+
           <View style={styles.pickerWrap}>
-            <Picker selectedValue={course} onValueChange={value => setCourse(value as Course)}>
+            <Picker
+              selectedValue={filterCourse}
+              onValueChange={value => setFilterCourse(value as 'All' | Course)}
+            >
+              <Picker.Item label="All" value="All" />
               {COURSES.map(c => (
                 <Picker.Item key={c} label={c} value={c} />
               ))}
             </Picker>
           </View>
-        </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Price (R)</Text>
-          <TextInput
-            style={styles.input}
-            value={priceText}
-            onChangeText={setPriceText}
-            placeholder="e.g. 45.00"
-            keyboardType="decimal-pad"
+          <FlatList
+            data={filteredItems}
+            keyExtractor={item => item.id}
+            ListEmptyComponent={<Text style={styles.emptyText}>No items found</Text>}
+            renderItem={({ item }) => (
+              <View style={styles.card}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.itemName}>{item.name}</Text>
+                  <Text style={styles.itemCourse}>{item.course}</Text>
+                  <Text style={styles.itemDesc}>{item.description}</Text>
+                  <Text style={styles.itemPrice}>R{item.price.toFixed(2)}</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                  <Text style={styles.deleteIcon}>🗑</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           />
-        </View>
 
-        <View style={styles.actions}>
-          <TouchableOpacity style={styles.saveBtn} onPress={handleAddItem}>
-            <Text style={styles.saveBtnText}>Save</Text>
-          </TouchableOpacity>
+          <View style={styles.footer}>
+            <TouchableOpacity style={styles.btnPrimary} onPress={() => setScreen('home')}>
+              <Text style={styles.btnText}>Back to Home</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
+    );
+  }
 
-          <TouchableOpacity
-            style={styles.cancelBtn}
-            onPress={() => {
-              clearForm();
-              setScreen('home');
-            }}
-          >
-            <Text style={styles.cancelBtnText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  );
+  return null;
 }
 
 // === STYLES ===
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
+  bg: { flex: 1 },
+  overlay: { flex: 1, backgroundColor: 'rgba(255,255,255,0.85)', padding: 16 },
   header: { marginBottom: 12 },
   title: { fontSize: 22, fontWeight: '700' },
   count: { fontSize: 14, color: '#666', marginTop: 4 },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { color: '#888', fontSize: 16, textAlign: 'center' },
+  emptyText: { color: '#555', fontSize: 16, textAlign: 'center' },
   list: { paddingBottom: 100 },
   card: {
-    backgroundColor: '#f3f4f6',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: 'rgba(243, 244, 246, 0.95)',
+    padding: 14,
+    borderRadius: 10,
     marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  itemName: { fontSize: 16, fontWeight: '600' },
+  itemName: { fontSize: 17, fontWeight: '700', color: '#111' },
   itemCourse: { fontSize: 13, color: '#4b5563', marginTop: 4 },
   itemDesc: { fontSize: 14, color: '#333', marginTop: 6 },
+  itemPrice: { fontSize: 15, fontWeight: '600', color: '#2563eb', marginTop: 8 },
+  deleteIcon: { fontSize: 18, color: 'red', marginLeft: 8 },
   footer: {
     position: 'absolute',
     left: 16,
@@ -223,8 +355,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   btnSecondaryText: { color: '#374151' },
-
-  formContainer: { padding: 16, paddingBottom: 40 },
   formTitle: { fontSize: 22, fontWeight: '700', marginBottom: 16 },
   field: { marginBottom: 16 },
   label: { fontWeight: '600', marginBottom: 6 },
@@ -234,13 +364,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.9)',
   },
   pickerWrap: {
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 8,
     overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    marginBottom: 10,
   },
   actions: { flexDirection: 'row', marginTop: 16 },
   saveBtn: {
@@ -258,6 +390,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e5e7eb',
+    backgroundColor: 'rgba(255,255,255,0.9)',
   },
   cancelBtnText: { color: '#374151' },
 });
