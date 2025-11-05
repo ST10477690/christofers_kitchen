@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View,  Text,  TextInput,  TouchableOpacity,  FlatList,  StyleSheet,  KeyboardAvoidingView,  Platform,  ScrollView,  Alert,  ImageBackground,} from 'react-native';
+import {  View,  Text,  TextInput,  TouchableOpacity,  FlatList,  StyleSheet,  KeyboardAvoidingView,  Platform,  ScrollView,  Alert,  ImageBackground,  Image,} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -63,6 +63,19 @@ export default function App() {
 
   const COURSES: Course[] = ['Starters', 'Mains', 'Dessert'];
 
+  // Calculate average prices per course
+  const calculateAveragePrices = () => {
+    const averages: Record<Course, number> = { Starters: 0, Mains: 0, Dessert: 0 };
+    COURSES.forEach(course => {
+      const courseItems = items.filter(item => item.course === course);
+      if (courseItems.length > 0) {
+        const total = courseItems.reduce((sum, i) => sum + i.price, 0);
+        averages[course] = total / courseItems.length;
+      }
+    });
+    return averages;
+  };
+
   const handleAddItem = () => {
     if (!name.trim()) {
       Alert.alert('Validation', 'Please enter the dish name.');
@@ -107,6 +120,8 @@ export default function App() {
 
   // === HOME SCREEN ===
   if (screen === 'home') {
+    const averages = calculateAveragePrices();
+
     return (
       <ImageBackground
         source={require('./assets/logo_jpg.png')}
@@ -115,8 +130,25 @@ export default function App() {
       >
         <SafeAreaView style={styles.overlay}>
           <View style={styles.header}>
-            <Text style={styles.title}>🍴 Restaurant Menu</Text>
+            <View style={styles.logoRow}>
+              <Image
+                source={require('./assets/logo.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+              <Text style={styles.title}>🍴 Christopher's Kitchen</Text>
+            </View>
             <Text style={styles.count}>Total: {items.length} items</Text>
+          </View>
+
+          {/* Average Prices Section */}
+          <View style={styles.avgSection}>
+            <Text style={styles.avgTitle}>Average Prices</Text>
+            {Object.entries(averages).map(([course, avg]) => (
+              <Text key={course as Course} style={styles.avgText}>
+                {course}: R{avg.toFixed(2)}
+              </Text>
+            ))}
           </View>
 
           {items.length === 0 ? (
@@ -172,7 +204,14 @@ export default function App() {
           behavior={Platform.select({ ios: 'padding', android: undefined })}
         >
           <ScrollView contentContainerStyle={styles.overlay}>
-            <Text style={styles.formTitle}>Add Menu Item</Text>
+            <View style={styles.logoRow}>
+              <Image
+                source={require('./assets/logo.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+              <Text style={styles.formTitle}>Add Menu Item</Text>
+            </View>
 
             <View style={styles.field}>
               <Text style={styles.label}>Dish name</Text>
@@ -229,13 +268,28 @@ export default function App() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.cancelBtn}
+                style={styles.deleteBtn}
                 onPress={() => {
-                  clearForm();
-                  setScreen('home');
+                  if (items.length === 0) {
+                    Alert.alert('Delete', 'There are no items to delete.');
+                    return;
+                  }
+                  const lastItem = items[items.length - 1];                 
+                  Alert.alert('Delete Last Item', `Delete "${lastItem.name}"?`, [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Delete',
+                      style: 'destructive',
+                      onPress: () => {
+                        setItems(prev => prev.slice(0, -1));
+                        clearForm();                       
+                        Alert.alert('Deleted', `${lastItem.name} was removed.`);
+                      },
+                    },
+                  ]);
                 }}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={styles.deleteBtnText}>Delete Last</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -249,9 +303,7 @@ export default function App() {
     const [filterCourse, setFilterCourse] = useState<'All' | Course>('All');
 
     const filteredItems =
-      filterCourse === 'All'
-        ? items
-        : items.filter(item => item.course === filterCourse);
+      filterCourse === 'All' ? items : items.filter(item => item.course === filterCourse);
 
     return (
       <ImageBackground
@@ -260,7 +312,14 @@ export default function App() {
         resizeMode="cover"
       >
         <SafeAreaView style={styles.overlay}>
-          <Text style={styles.title}>🍽 Filter by Course</Text>
+          <View style={styles.logoRow}>
+            <Image
+              source={require('./assets/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>🍽 Filter by Course</Text>
+          </View>
 
           <View style={styles.pickerWrap}>
             <Picker
@@ -311,8 +370,13 @@ const styles = StyleSheet.create({
   bg: { flex: 1 },
   overlay: { flex: 1, backgroundColor: 'rgba(255,255,255,0.85)', padding: 16 },
   header: { marginBottom: 12 },
+  logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' },
+  logo: { width: 50, height: 50, marginRight: 10 },
   title: { fontSize: 22, fontWeight: '700' },
   count: { fontSize: 14, color: '#666', marginTop: 4 },
+  avgSection: { marginVertical: 12, backgroundColor: '#f3f4f6', padding: 10, borderRadius: 8 },
+  avgTitle: { fontSize: 18, fontWeight: '700', marginBottom: 6 },
+  avgText: { fontSize: 15, color: '#374151' },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { color: '#555', fontSize: 16, textAlign: 'center' },
   list: { paddingBottom: 100 },
@@ -384,13 +448,13 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   saveBtnText: { color: '#fff', fontWeight: '600' },
-  cancelBtn: {
+  deleteBtn: {
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderColor: '#dc2626',
+    backgroundColor: '#fee2e2',
   },
-  cancelBtnText: { color: '#374151' },
+  deleteBtnText: { color: '#b91c1c', fontWeight: '600' },
 });
