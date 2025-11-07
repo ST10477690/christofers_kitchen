@@ -317,7 +317,7 @@ export default function App() {
                 <Text style={styles.saveBtnText}>Add Item</Text>
               </TouchableOpacity>
 
-              {/* Delete Last Item (Retained from original PoC) */}
+              {/* Delete Last Item  */}
               <TouchableOpacity
                 style={styles.deleteBtn}
                 onPress={() => {
@@ -362,7 +362,7 @@ export default function App() {
 // === STYLES ===
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  overlay: { flexGrow: 1, backgroundColor: 'rgba(255,255,255,1)', padding: 16 },
+  overlay: { flexGrow: 1, backgroundColor: 'rgba(255,255,255,0,80)', padding: 16 },
   header: { marginBottom: 12 },
   logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' },
   logo: { width: 50, height: 50, marginRight: 10 },
