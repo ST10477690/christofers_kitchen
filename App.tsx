@@ -1,18 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert,
-  ImageBackground,
-  Image,
-} from 'react-native';
+import {  View,  Text,  TextInput,  TouchableOpacity,  FlatList,  StyleSheet,  KeyboardAvoidingView,  Platform,  ScrollView,  Alert,  ImageBackground,  Image,} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -78,7 +65,7 @@ export default function App() {
 
   const COURSES: Course[] = ['Starters', 'Mains', 'Dessert'];
 
-  // Calculate average prices per course (Memoized for performance)
+  // Calculate average prices per course 
   const averages = useMemo(() => {
     const calculatedAverages: Record<Course, number> = { Starters: 0, Mains: 0, Dessert: 0 };
     COURSES.forEach(courseKey => {
